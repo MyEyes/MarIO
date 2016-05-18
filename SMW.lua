@@ -138,7 +138,7 @@ end
 
 function SMW.isBossfight()
 	--read level mode and check if its a boss mode
-	return memory.readbyte(0x0D9B) >= 0x80
+	return (memory.readbyte(0x0D9B) >= 0x80 or memory.readbyte(0x0DDA) == 5)
 end
 
 function SMW.guessFitness()
