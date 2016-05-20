@@ -1005,6 +1005,12 @@ function playTop()
 	return
 end
 
+function reload_lib()
+	console.writeline("Reloading")
+	package.loaded.SMW = nil
+	game = require "SMW"
+end
+
 function onExit()
 	forms.destroy(form)
 end
@@ -1016,6 +1022,7 @@ event.onexit(onExit)
 form = forms.newform(200, 260, "Fitness")
 maxFitnessLabel = forms.label(form, "Max Fitness: " .. math.floor(pool.maxFitness), 5, 8)
 showNetwork = forms.checkbox(form, "Show Map", 5, 30)
+saveButton = forms.button(form, "Reload Lib", reload_lib, 110, 30)
 showMutationRates = forms.checkbox(form, "Show M-Rates", 5, 52)
 restartButton = forms.button(form, "Restart", initializePool, 5, 77)
 saveButton = forms.button(form, "Save", savePool, 5, 102)

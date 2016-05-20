@@ -33,10 +33,19 @@ function SMW.getPositions()
 end
 
 function SMW.getTile(dx, dy)
-	x = math.floor((marioX+dx+8)/16)
-	y = math.floor((marioY+dy)/16)
 	
-	return memory.readbyte(0x1C800 + math.floor(x/0x10)*0x1B0 + y*0x10 + x%0x10)
+	limx = (memory.readbyte(0x5E)+1)*0x10
+	
+	if memory.readbyte(0x1412)==1 then
+		x = math.floor((marioX+dx+8)/16)
+		y = math.floor((marioY+dy)/16)
+		if x>limx or x<0 then return 0 end
+		return memory.readbyte(0x1C800 + math.floor(x/0x10)*0x100 + math.floor(y/0x10)*0x10*limx + (y%0x10)*0x10 + x%0x10)
+	else
+		x = math.floor((marioX+dx+8)/16)
+		y = math.floor((marioY+dy)/16)
+		return memory.readbyte(0x1C800 + math.floor(x/0x10)*0x1B0 + y*0x10 + x%0x10)
+	end
 end
 
 
@@ -85,7 +94,7 @@ function SMW.getInputs()
 			local y = math.floor((marioY+dy)/16)
 			
 			tile = SMW.getTile(dx, dy)
-			if tilesSeen["L" .. level .. "X" .. x .. "Y" .. y] == nil and marioY+dy < 0x1B0 then
+			if tilesSeen["L" .. level .. "X" .. x .. "Y" .. y] == nil then
 				tilesSeen["L" .. level .. "X" .. x .. "Y" .. y] = 1
 				totalSeen = totalSeen + 1;
 				if tile == 1 then
@@ -93,7 +102,7 @@ function SMW.getInputs()
 				end
 				timeout = TimeoutConstant
 			end
-			if tile == 1 and marioY+dy < 0x1B0 then
+			if tile == 1 then
 				inputs[#inputs] = 1
 			end
 			
@@ -184,8 +193,10 @@ end
 
 function SMW.calcFitness(species, genome)
 	SMW.getPositions()
-		
-	timeout = timeout - 1
+	
+	if memory.readbyte(0x009D)==0 then
+		timeout = timeout - 1
+	end
 	
 	timeoutBonus = pool.currentFrame / 4
 	if (timeout + timeoutBonus <= 0 and (not wasBossfight)) or SMW.isDead() or SMW.levelBeat() then
