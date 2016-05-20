@@ -142,17 +142,44 @@ function SMW.isBossfight()
 end
 
 function SMW.guessFitness()
+
+	--we have to remember if we were in a bossfight
+	--because for lemmy and wendy, we'd have to check by music
+	--and when mario dies the check for music fails
+	if not wasBossfight then
+		wasBossfight = SMW.isBossfight();
+		if wasBossfight then
+			bossfightTime = SMW.getTimeLeft();
+			bossfightFrame = pool.currentFrame;
+		end
+	end
+	
 	local fitness = totalSeen - pool.currentFrame / 2
 	if SMW.levelBeat() then
 		fitness = fitness + 3000;
 	end
-	if SMW.isBossfight() then
-		fitness = fitness + pool.currentFrame
+	if wasBossfight then
+		--if we haven't spent half of the time we were in the bossfight yet, we gain points
+		if SMW.getTimeLeft()>=bossfightTime/2 then
+			--fitness is totalSeen - frame at start of bossfight/2 + frames in bossfight/2
+			fitness = fitness + (pool.currentFrame - bossfightFrame/2)		
+		else
+			--fitness is totalSeen - frame at start of bossfight/2 + (half of the frames in the bossfight)/2 - frames after that half/2
+			fitness = fitness + (pool.currentFrame - bossfightFrame)/2 + (bossfightTime*20 - (pool.currentFrame-bossfightFrame-bossfightTime*20))/2
+		end
 	end
-	if SMW.isBossfight() and SMW.levelBeat() then
+	if wasBossfight and SMW.levelBeat() then
 		fitness = 50000 - pool.currentFrame
 	end
 	return fitness
+end
+
+function SMW.getTimeLeft()
+	return memory.readbyte(0xF31)*100 + memory.readbyte(0xF32)*10 + memory.readbyte(0xF31)
+end
+
+function SMW.reset()
+	wasBossfight = false
 end
 
 function SMW.calcFitness(species, genome)
@@ -161,7 +188,7 @@ function SMW.calcFitness(species, genome)
 	timeout = timeout - 1
 	
 	timeoutBonus = pool.currentFrame / 4
-	if (timeout + timeoutBonus <= 0 and (not SMW.isBossfight())) or SMW.isDead() or SMW.levelBeat() then
+	if (timeout + timeoutBonus <= 0 and (not wasBossfight)) or SMW.isDead() or SMW.levelBeat() then
 		local fitness = SMW.guessFitness()
 		if fitness == 0 then
 			fitness = -1

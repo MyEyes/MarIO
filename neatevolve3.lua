@@ -707,6 +707,7 @@ function initializeRun()
 	pool.currentFrame = 0
 	timeout = TimeoutConstant
 	clearJoypad()
+	game.reset()
 	
 	local species = pool.species[pool.currentSpecies]
 	local genome = species.genomes[pool.currentGenome]
