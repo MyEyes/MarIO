@@ -142,7 +142,7 @@ end
 
 function SMW.levelBeat()
 	--read level end countdown timer, if set the level has ended
-	return memory.readbyte(0x1493) > 0
+	return memory.readbyte(0x1493) > 0 or memory.readbyte(0x1434) > 0
 end
 
 function SMW.isBossfight()
