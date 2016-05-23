@@ -40,7 +40,9 @@ function SMW.getTile(dx, dy)
 		x = math.floor((marioX+dx+8)/16)
 		y = math.floor((marioY+dy)/16)
 		if x>limx or x<0 then return 0 end
-		return memory.readbyte(0x1C800 + math.floor(x/0x10)*0x100 + math.floor(y/0x10)*0x10*limx + (y%0x10)*0x10 + x%0x10)
+		local offset =  math.floor(x/0x10)*0x100 + math.floor(y/0x10)*0x10*limx + (y%0x10)*0x10 + x%0x10
+		if offset>14336 then return 0 end
+		return memory.readbyte(0x1C800 + offset)
 	else
 		x = math.floor((marioX+dx+8)/16)
 		y = math.floor((marioY+dy)/16)
