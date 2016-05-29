@@ -15,7 +15,7 @@ if gameinfo.getromname() == "Super Mario Bros." then
 end
 
 if gameinfo.getromname() == "Super Mario World (USA)" then
-	game = require "SMW";
+	game = require "SMW"
 end
 
 game.init();
@@ -49,6 +49,8 @@ tilesSeen = {}
 totalSeen = 0
 
 MaxNodes = 1000000
+
+history = require 'history'
 
 function generateName()
 	local vocals = {'a','e','i','o','u','y'}
@@ -647,6 +649,7 @@ function addToSpecies(child)
 end
 
 function newGeneration()
+	history.setGeneration(pool.generation, pool)
 	cullSpecies(false) -- Cull the bottom half of each species
 	rankGlobally()
 	removeStaleSpecies()
@@ -687,7 +690,7 @@ function initializePool()
 		basic = basicGenome()
 		addToSpecies(basic)
 	end
-
+	history.clear()
 	initializeRun()
 end
 
@@ -929,10 +932,11 @@ end
 function savePool()
 	local filename = forms.gettext(saveLoadFile)
 	writeFile(filename)
+	history.save(filename .. ".hst")
 end
 
 function loadFile(filename)
-        local file = io.open(filename, "r")
+    local file = io.open(filename, "r")
 	pool = newPool()
 	pool.generation = file:read("*number")
 	pool.maxFitness = file:read("*number")
@@ -975,6 +979,7 @@ function loadFile(filename)
 		nextGenome()
 	end
 	initializeRun()
+	history.load(filename .. ".hst")
 	pool.currentFrame = pool.currentFrame + 1
 end
  
@@ -1074,6 +1079,10 @@ while true do
 		gui.drawText(0, 0, "Gen " .. pool.generation .. " spec " .. pool.species[pool.currentSpecies].name .. " genome " .. pool.currentGenome .. " (" .. math.floor(measured/total*100) .. "%)", 0xFF000000, 11)
 		gui.drawText(0, 12, "Fitness: " .. math.floor(tempfitness), 0xFF000000, 11)
 		gui.drawText(100, 12, "Max Fitness: " .. math.floor(pool.maxFitness), 0xFF000000, 11)
+	end
+	
+	if forms.ischecked(showHistory) then
+		history.show()
 	end
 		
 	pool.currentFrame = pool.currentFrame + 1
