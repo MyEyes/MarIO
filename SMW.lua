@@ -35,7 +35,7 @@ end
 function SMW.getTile(dx, dy)
 	
 	limx = (memory.readbyte(0x5E)+1)*0x10
-	
+	--if the level scrolls vertically
 	if memory.readbyte(0x1412)==1 then
 		x = math.floor((marioX+dx+8)/16)
 		y = math.floor((marioY+dy)/16)
@@ -79,11 +79,19 @@ function SMW.getExtendedSprites()
 	return extended
 end
 
+function SMW.isScreenBorder(dx, dy)
+	x = math.floor((screenX+dx+8)/16)
+	local width = 16
+	return x==0 or x==width
+end
+
 function SMW.getInputs()
 	SMW.getPositions()
 	
 	sprites = SMW.getSprites()
 	extended = SMW.getExtendedSprites()
+	
+	local autoscroller = SMW.isAutoScroller()
 	
 	local inputs = {}
 	
@@ -104,7 +112,7 @@ function SMW.getInputs()
 				end
 				timeout = TimeoutConstant
 			end
-			if tile == 1 then
+			if tile == 1 or (autoscroller and SMW.isScreenBorder(dx, dy)) then
 				inputs[#inputs] = 1
 			end
 			
@@ -187,6 +195,11 @@ end
 
 function SMW.getTimeLeft()
 	return memory.readbyte(0xF31)*100 + memory.readbyte(0xF32)*10 + memory.readbyte(0xF31)
+end
+
+function SMW.isAutoScroller()
+	local val = memory.readbyte(0x143E)
+	return (val == 0x01 or val == 0x0C)
 end
 
 function SMW.reset()
