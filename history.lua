@@ -10,10 +10,10 @@ end
 function history.save(filename)
 	local file = io.open(filename, "w")
 	file:write(#history.generations .. "\n")
-	for n, generation in pairs(history.generations) do
+	for n, generation in ipairs(history.generations) do
 		file:write(generation.maxFitness .. "\n")
 		file:write(#generation.species .. "\n")
-		for m,species in pairs(generation.species) do
+		for m,species in ipairs(generation.species) do
 			file:write(species.name .. "\n")
 			file:write(species.topFitness .. "\n")
 		end
@@ -22,15 +22,18 @@ function history.save(filename)
 end
 
 function history.load(filename)
+	history.clear()
 	local file = io.open(filename, "r")
 	local numGens = file:read("*number")
-	for g=0,numGens do
+	for g=1,numGens do
 		history.generations[g] = {}
 		history.generations[g].maxFitness = file:read("*number")
 		local numSpecies = file:read("*number")
 		history.generations[g].species = {}
-		for s=0,numSpecies do
+		for s=1,numSpecies do
 			history.generations[g].species[s] = {}
+			--read to end of previous line first
+			file:read("*line")
 			history.generations[g].species[s].name = file:read("*line")
 			history.generations[g].species[s].topFitness = file:read("*number")
 		end
@@ -59,9 +62,9 @@ function history.show()
 	if #history.generations>0 then
 		local maxFitness = history.generations[#history.generations].maxFitness
 		local nodes = #history.generations+1
-		for n, generation in pairs(history.generations) do
+		for n, generation in ipairs(history.generations) do
 			local last = 0
-			if n==0 then last = 0 else last = history.generations[n-1].maxFitness end
+			if n==1 then last = 0 else last = history.generations[n-1].maxFitness end
 			local current = generation.maxFitness
 			gui.drawLine(xLeft+n*width/nodes, yBot-height*last/maxFitness, xLeft+(n+1)*width/nodes, yBot-height*current/maxFitness, 0xFF000000)
 			last=current
