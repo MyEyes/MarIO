@@ -25,8 +25,11 @@ function SMW.getPositions()
 	marioX = memory.read_s16_le(0x94)
 	marioY = memory.read_s16_le(0x96)
 	
-	local layer1x = memory.read_s16_le(0x1A);
-	local layer1y = memory.read_s16_le(0x1C);
+	layer1x = memory.read_s16_le(0x1A);
+	layer1y = memory.read_s16_le(0x1C);
+	
+	layer2x = memory.read_s16_le(0x1E);
+	layer2y = memory.read_s16_le(0x20)
 	
 	screenX = marioX-layer1x
 	screenY = marioY-layer1y
@@ -48,6 +51,19 @@ function SMW.getTile(dx, dy)
 		y = math.floor((marioY+dy)/16)
 		return memory.readbyte(0x1C800 + math.floor(x/0x10)*0x1B0 + y*0x10 + x%0x10)
 	end
+end
+
+function SMW.getLayer2Tile(dx,dy)
+	limx = (memory.readbyte(0x5E)+1)
+	limy = (memory.readbyte(0x5F))
+	--there is a maximum of 32 screens and a layer 2 level can only have 16,
+	--so it makes sense that there would be half and half
+	baseOffset = 16*0x1B0
+	x = math.floor((marioX+layer2x-layer1x+dx+8)/16)
+	y = math.floor((marioY+layer2y-layer1y+dy)/16)
+	local offset = baseOffset + math.floor(x/0x10)*0x1B0 + y*0x10 + x%0x10
+	if offset>14336 then return 0 end
+	return memory.readbyte(0x1C800 + offset)
 end
 
 
@@ -95,7 +111,11 @@ function SMW.getInputs()
 	
 	local inputs = {}
 	
-	local level = memory.readbyte(0x141A);
+	local level = memory.readbyte(0x141A)
+	
+	--check if layer2 collides in this level
+	local layer2collide = (memory.readbyte(0x5B)>=0x80)
+	
 	
 	for dy=-BoxRadius*16,BoxRadius*16,16 do
 		for dx=-BoxRadius*16,BoxRadius*16,16 do
@@ -104,6 +124,10 @@ function SMW.getInputs()
 			local y = math.floor((marioY+dy)/16)
 			
 			tile = SMW.getTile(dx, dy)
+			
+			--if layer2 collides also check if there is something there
+			if layer2collide and tile == 0 then tile = SMW.getLayer2Tile(dx,dy) end
+			
 			if tilesSeen["L" .. level .. "X" .. x .. "Y" .. y] == nil then
 				tilesSeen["L" .. level .. "X" .. x .. "Y" .. y] = 1
 				totalSeen = totalSeen + 1;
