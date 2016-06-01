@@ -214,7 +214,7 @@ function SMW.calcFitness(species, genome)
 	end
 	
 	timeoutBonus = pool.currentFrame / 4
-	if (timeout + timeoutBonus <= 0 and (not wasBossfight)) or SMW.isDead() or SMW.levelBeat() then
+	if (timeout + timeoutBonus <= 0 and (not wasBossfight) and (not SMW.isAutoScroller())) or SMW.isDead() or SMW.levelBeat() then
 		local fitness = SMW.guessFitness()
 		if fitness == 0 then
 			fitness = -1
